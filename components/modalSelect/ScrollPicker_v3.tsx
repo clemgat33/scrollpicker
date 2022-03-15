@@ -2,7 +2,7 @@ import React from "react";
 import { makeStyles } from "@material-ui/core";
 import Scrollbar from "smooth-scrollbar";
 import { ScrollStatus } from "smooth-scrollbar/interfaces";
-import OverscrollPlugin from "smooth-scrollbar/plugins/overscroll";
+import useDraggableScroll from "../../hooks/useDraggableScroll";
 
 export interface IProps {
   elements: { value: string; logo?: string }[];
@@ -20,38 +20,31 @@ const ScrollPicker: React.FC<IProps> = ({
   specialType,
 }) => {
   const classes = useStyles();
-
-  const initialScrollTop = selectedValue ? elements.map(elem => elem.value).indexOf(selectedValue) * 30 : 0;
-
   const scrollerRef = React.useRef<HTMLDivElement>(null);
-  let scrollbar: Scrollbar;
 
-  const overscrollOptions = {
-    enable: true,
-    effect: "bounce",
-    damping: 0.15,
-    maxOverscroll: 150,
-  };
-
-  const options = {
-    damping: 0.1,
-    plugins: {
-      overscroll: { ...overscrollOptions },
-    },
-  };
+  let scrollbar: Scrollbar | null = null;
 
   React.useEffect(() => {
     initScrollbar();
 
     return () => {
-      scrollbar.removeListener(listenerScrollbar);
-      scrollbar.destroy();
+      if (scrollbar) {
+        scrollbar.removeListener(listenerScrollbar);
+        scrollbar.destroy();
+      }
     };
   }, []);
 
+  const initialScrollTop = selectedValue ? elements.map(elem => elem.value).indexOf(selectedValue) * 30 : 0;
+
+  const options = {
+    damping: 0.1,
+    plugins: {
+      overscroll: { enable: true, effect: "bounce", damping: 0.15, maxOverscroll: 150 },
+    },
+  };
   const initScrollbar = () => {
-    if (scrollbar === undefined && scrollerRef.current) {
-      // Scrollbar.use(OverscrollPlugin); //problem with module ??
+    if (!scrollbar && scrollerRef.current) {
       scrollbar = Scrollbar.init(scrollerRef.current, options);
       scrollbar.scrollTop = initialScrollTop;
       scrollbar.addListener(listenerScrollbar);
@@ -61,10 +54,44 @@ const ScrollPicker: React.FC<IProps> = ({
 
   const listenerScrollbar = (status: ScrollStatus) => {
     const closestPoint = Math.round(status.offset.y / 30) * 30;
-    scrollbar.scrollTop = closestPoint;
+    if (scrollbar) scrollbar.scrollTop = closestPoint;
     const value = getSelectedValue(closestPoint);
     handleSelect(value);
     if (scrollerRef.current?.children[0]) styleChildren(scrollerRef.current.children[0].children, closestPoint);
+  };
+
+  const styleChildren = (children: any, offsetY: number) => {
+    // selected child
+    children[offsetY / 30 + 3]?.setAttribute("data-selected", "0");
+    // selected child +- 1
+    children[offsetY / 30 + 2]?.setAttribute("data-selected", "1");
+    children[offsetY / 30 + 4]?.setAttribute("data-selected", "1");
+    // selected child +- 2
+    children[offsetY / 30 + 1]?.setAttribute("data-selected", "2");
+    children[offsetY / 30 + 5]?.setAttribute("data-selected", "2");
+    // selected child +- 3
+    children[offsetY / 30]?.setAttribute("data-selected", "3");
+    children[offsetY / 30 + 6]?.setAttribute("data-selected", "3");
+  };
+
+  //=== START DRAGGABLE ===//
+  let initialPosition = {
+    scrollTop: 0,
+    mouseY: 0,
+    offsetY: 0,
+    isMoving: false,
+  };
+
+  const handleClick = (clickedPoint: number) => {
+    const closestPoint = getClosestPoint(clickedPoint, true);
+    const value = getSelectedValue(closestPoint);
+    handleSelectAndClose(value);
+  };
+
+  const getSelectedValue = (point: number) => {
+    const index = point / 30;
+    const value = elements[index].value;
+    return value;
   };
 
   const getClosestPoint = (offsetY: number, isOnClick?: boolean) => {
@@ -91,28 +118,8 @@ const ScrollPicker: React.FC<IProps> = ({
     return closestPoint;
   };
 
-  const getSelectedValue = (point: number) => {
-    const index = point / 30;
-    const value = elements[index].value;
-    return value;
-  };
-
-  let initialPosition = {
-    scrollTop: 0,
-    mouseY: 0,
-    offsetY: 0,
-    isMoving: false,
-  };
-
   const onTouchStart = (event: React.TouchEvent) => {
     const { clientY } = event.touches[0];
-    handleDown(clientY);
-  };
-  const onMouseDown = (event: { clientY: number }) => {
-    handleDown(event.clientY);
-  };
-
-  const handleDown = (clientY: number) => {
     if (scrollbar && scrollerRef.current) {
       // Save the position at the moment the user presses down
       var br = document.getElementById("scroll_picker")?.getBoundingClientRect();
@@ -121,6 +128,50 @@ const ScrollPicker: React.FC<IProps> = ({
         scrollTop: scrollbar.scrollTop,
         mouseY: clientY,
         offsetY: clientY - (br?.top ?? 0),
+      };
+
+      scrollerRef.current.style.cursor = "grabbing";
+
+      // Add the event listeners that will track the mouse position for the rest of the interaction
+      document.addEventListener("touchmove", touchMoveHandler);
+      document.addEventListener("touchup", touchUpHandler);
+    } else initScrollbar();
+  };
+
+  const touchMoveHandler = (event: TouchEvent) => {
+    const { clientY } = event.touches[0];
+    if (scrollbar && scrollerRef.current) {
+      const distanceY = clientY - initialPosition.mouseY;
+      if (Math.abs(distanceY) > 10) {
+        initialPosition.isMoving = true;
+        // Scroll the element according to those differences
+        scrollbar.scrollTop = initialPosition.scrollTop - distanceY;
+      } else initialPosition.isMoving = false;
+    }
+  };
+
+  const touchUpHandler = () => {
+    if (scrollerRef.current) scrollerRef.current.style.cursor = "grab";
+    // Remove the event listeners since it is not necessary to track the mouse position anymore
+    document.removeEventListener("mousemove", mouseMoveHandler);
+    document.removeEventListener("mouseup", mouseUpHandler);
+
+    if (initialPosition.isMoving === false && scrollbar) {
+      const clickedPoint = initialPosition.offsetY + scrollbar.scrollTop - 90;
+      handleClick(clickedPoint);
+    } else initialPosition.isMoving = false;
+  };
+
+  const onMouseDown = (event: { clientY: number }) => {
+    console.log("onMouseDown", scrollbar, scrollerRef.current);
+    if (scrollbar && scrollerRef.current) {
+      // Save the position at the moment the user presses down
+      var br = document.getElementById("scroll_picker")?.getBoundingClientRect();
+      initialPosition = {
+        ...initialPosition,
+        scrollTop: scrollbar.scrollTop,
+        mouseY: event.clientY,
+        offsetY: event.clientY - (br?.top ?? 0),
       };
 
       scrollerRef.current.style.cursor = "grabbing";
@@ -148,57 +199,33 @@ const ScrollPicker: React.FC<IProps> = ({
     document.removeEventListener("mousemove", mouseMoveHandler);
     document.removeEventListener("mouseup", mouseUpHandler);
 
-    if (initialPosition.isMoving === false) {
-      handleClick();
+    if (initialPosition.isMoving === false && scrollbar) {
+      const clickedPoint = initialPosition.offsetY + scrollbar.scrollTop - 90;
+      handleClick(clickedPoint);
     } else initialPosition.isMoving = false;
   };
-
-  const handleClick = () => {
-    const clickedScrollTop = initialPosition.offsetY + scrollbar.scrollTop - 90;
-    const closestPoint = getClosestPoint(clickedScrollTop, true);
-    const value = getSelectedValue(closestPoint);
-    handleSelectAndClose(value);
-  };
-
-  const styleChildren = (children: any, offsetY: number) => {
-    // selected child
-    children[offsetY / 30 + 3]?.setAttribute("data-selected", "0");
-    // selected child +- 1
-    children[offsetY / 30 + 2]?.setAttribute("data-selected", "1");
-    children[offsetY / 30 + 4]?.setAttribute("data-selected", "1");
-    // selected child +- 2
-    children[offsetY / 30 + 1]?.setAttribute("data-selected", "2");
-    children[offsetY / 30 + 5]?.setAttribute("data-selected", "2");
-    // selected child +- 3
-    children[offsetY / 30]?.setAttribute("data-selected", "3");
-    children[offsetY / 30 + 6]?.setAttribute("data-selected", "3");
-  };
+  //=== END DRAGGABLE ===//
 
   const emptyElems: { value: string; logo?: string }[] = [...Array(3)].map(() => ({ value: "" }));
-
   const elementsWithEmpty = [...emptyElems, ...elements, ...emptyElems];
 
-  const items = (
-    <div ref={scrollerRef} className={classes.elements}>
-      {elementsWithEmpty.map(elem => (
-        <div key={elem.value} className={classes.element}>
-          {!specialType ? (
-            elem.value
-          ) : (
-            <>
-              {specialType === "countries" && elem.value}
-              {specialType === "logos" && elem.logo && <img src={elem.logo} alt={elem.value} />}
-            </>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-
   return (
-    <div id="scroll_picker" className={classes.container}>
+    <div id="scroll_picker" className={classes.container} onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
       <div className={classes.itemBox} />
-      {items}
+      <div ref={scrollerRef} className={classes.elements}>
+        {elementsWithEmpty.map((elem, index) => (
+          <div key={index} className={classes.element}>
+            {!specialType ? (
+              elem.value
+            ) : (
+              <>
+                {specialType === "countries" && elem.value}
+                {specialType === "logos" && elem.logo && <img src={elem.logo} alt={elem.value} />}
+              </>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

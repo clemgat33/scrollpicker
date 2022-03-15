@@ -9,6 +9,7 @@ const Pickers: React.FC = () => {
 
   const [year, setYear] = React.useState(initialValue ? initialValue.getFullYear() : 0);
   const [openv1, setOpenv1] = React.useState<boolean>(false);
+  const [openv2, setOpenv2] = React.useState<boolean>(false);
   const [openv3, setOpenv3] = React.useState<boolean>(false);
 
   const years = [...Array(100)].map((_, i) => (new Date().getFullYear() - 18 - i).toString());
@@ -24,11 +25,13 @@ const Pickers: React.FC = () => {
           initialValue={year ? year.toString() : years[0]}
           handleSelectChange={value => setYear(parseInt(value))}
           size="small"
+          version={1}
         />
         <Button className={classes.buttonSelect} onClick={() => setOpenv1(true)} endIcon={<KeyboardArrowDownIcon />}>
           {year !== 0 ? year.toString() : "Year" ?? "-"}
         </Button>
       </div>
+
       <div>
         <h4>Version 3</h4>
         <ModalSelect
@@ -53,8 +56,9 @@ export default Pickers;
 const useStyles = makeStyles(theme => ({
   wrapper: {
     display: "flex",
-    width: 200,
-    justifyContent: "space-between",
+    "&& > div ": {
+      margin: 10,
+    },
   },
   buttonSelect: {
     textTransform: "none",

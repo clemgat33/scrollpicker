@@ -3,6 +3,7 @@ import { Dialog, DialogContent, makeStyles } from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
 import CustomButton from "../CustomButton";
 import ScrollPicker from "./ScrollPicker";
+import ScrollPickerV2 from "./ScrollPicker_v2";
 import ScrollPickerV3 from "./ScrollPicker_v3";
 
 interface IProps {
@@ -13,7 +14,7 @@ interface IProps {
   handleSelectChange: (v: string) => void;
   size: "small" | "large";
   specialType?: "countries" | "logos";
-  version?: 1 | 3;
+  version?: 1 | 2 | 3;
 }
 
 const ModalSelect: React.FC<IProps> = ({
@@ -68,11 +69,8 @@ const ModalSelect: React.FC<IProps> = ({
         <div className={classes.closeIcon}>
           <CloseIcon onClick={onClose} />
         </div>
-        <div
-          style={size === "small" ? { width: 100 } : { width: 200 }}
-          className={classes.wrapper}
-        >
-          {version === 3 ? (
+        <div style={size === "small" ? { width: 100 } : { width: 200 }} className={classes.wrapper}>
+          {version === 3 && (
             <ScrollPickerV3
               elements={options}
               selectedValue={value}
@@ -80,7 +78,8 @@ const ModalSelect: React.FC<IProps> = ({
               handleSelectAndClose={handleSelectAndClose}
               specialType={specialType}
             />
-          ) : (
+          )}
+          {version === 1 && (
             <ScrollPicker
               elements={options}
               selectedValue={value}
@@ -90,10 +89,7 @@ const ModalSelect: React.FC<IProps> = ({
             />
           )}
         </div>
-        <div
-          className={classes.button}
-          style={size === "small" ? {} : { width: 200 }}
-        >
+        <div className={classes.button} style={size === "small" ? {} : { width: 200 }}>
           <CustomButton handleClick={handleChooseValue} text="OK" />
         </div>
       </DialogContent>
