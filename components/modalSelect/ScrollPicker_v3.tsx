@@ -55,7 +55,7 @@ const ScrollPicker: React.FC<IProps> = ({
       scrollbar = Scrollbar.init(scrollerRef.current, options);
       scrollbar.scrollTop = initialScrollTop;
       scrollbar.addListener(listenerScrollbar);
-      if (scrollerRef.current?.firstChild) styleChildren(scrollerRef.current.children[0].children, initialScrollTop);
+      if (scrollerRef.current?.children[0]) styleChildren(scrollerRef.current.children[0].children, initialScrollTop);
     }
   };
 
@@ -64,7 +64,7 @@ const ScrollPicker: React.FC<IProps> = ({
     scrollbar.scrollTop = closestPoint;
     const value = getSelectedValue(closestPoint);
     handleSelect(value);
-    if (scrollerRef.current?.firstChild) styleChildren(scrollerRef.current.children[0].children, closestPoint);
+    if (scrollerRef.current?.children[0]) styleChildren(scrollerRef.current.children[0].children, closestPoint);
   };
 
   const getClosestPoint = (offsetY: number, isOnClick?: boolean) => {
@@ -162,16 +162,16 @@ const ScrollPicker: React.FC<IProps> = ({
 
   const styleChildren = (children: any, offsetY: number) => {
     // selected child
-    children[offsetY / 30 + 3].setAttribute("data-selected", "0");
+    children[offsetY / 30 + 3]?.setAttribute("data-selected", "0");
     // selected child +- 1
-    children[offsetY / 30 + 2].setAttribute("data-selected", "1");
-    children[offsetY / 30 + 4].setAttribute("data-selected", "1");
+    children[offsetY / 30 + 2]?.setAttribute("data-selected", "1");
+    children[offsetY / 30 + 4]?.setAttribute("data-selected", "1");
     // selected child +- 2
-    children[offsetY / 30 + 1].setAttribute("data-selected", "2");
-    children[offsetY / 30 + 5].setAttribute("data-selected", "2");
+    children[offsetY / 30 + 1]?.setAttribute("data-selected", "2");
+    children[offsetY / 30 + 5]?.setAttribute("data-selected", "2");
     // selected child +- 3
-    children[offsetY / 30].setAttribute("data-selected", "3");
-    children[offsetY / 30 + 6].setAttribute("data-selected", "3");
+    children[offsetY / 30]?.setAttribute("data-selected", "3");
+    children[offsetY / 30 + 6]?.setAttribute("data-selected", "3");
   };
 
   const emptyElems: { value: string; logo?: string }[] = [...Array(3)].map(() => ({ value: "" }));
