@@ -21,9 +21,7 @@ const ScrollPicker: React.FC<IProps> = ({
 }) => {
   const classes = useStyles();
 
-  const initialScrollTop = selectedValue
-    ? elements.map((elem) => elem.value).indexOf(selectedValue) * 30
-    : 0;
+  const initialScrollTop = selectedValue ? elements.map(elem => elem.value).indexOf(selectedValue) * 30 : 0;
 
   const scrollerRef = React.useRef<HTMLDivElement>(null);
   let scrollbar: Scrollbar;
@@ -36,7 +34,7 @@ const ScrollPicker: React.FC<IProps> = ({
   };
 
   const options = {
-    damping: 0.07,
+    damping: 0.1,
     plugins: {
       overscroll: { ...overscrollOptions },
     },
@@ -57,11 +55,7 @@ const ScrollPicker: React.FC<IProps> = ({
       scrollbar = Scrollbar.init(scrollerRef.current, options);
       scrollbar.scrollTop = initialScrollTop;
       scrollbar.addListener(listenerScrollbar);
-      if (scrollerRef.current?.firstChild)
-        styleChildren(
-          scrollerRef.current.children[0].children,
-          initialScrollTop
-        );
+      if (scrollerRef.current?.firstChild) styleChildren(scrollerRef.current.children[0].children, initialScrollTop);
     }
   };
 
@@ -70,8 +64,7 @@ const ScrollPicker: React.FC<IProps> = ({
     scrollbar.scrollTop = closestPoint;
     const value = getSelectedValue(closestPoint);
     handleSelect(value);
-    if (scrollerRef.current?.firstChild)
-      styleChildren(scrollerRef.current.children[0].children, closestPoint);
+    if (scrollerRef.current?.firstChild) styleChildren(scrollerRef.current.children[0].children, closestPoint);
   };
 
   const getClosestPoint = (offsetY: number, isOnClick?: boolean) => {
@@ -111,17 +104,23 @@ const ScrollPicker: React.FC<IProps> = ({
     isMoving: false,
   };
 
+  const onTouchStart = (event: React.TouchEvent) => {
+    const { clientY } = event.touches[0];
+    handleDown(clientY);
+  };
   const onMouseDown = (event: { clientY: number }) => {
+    handleDown(event.clientY);
+  };
+
+  const handleDown = (clientY: number) => {
     if (scrollbar && scrollerRef.current) {
       // Save the position at the moment the user presses down
-      var br = document
-        .getElementById("scroll_picker")
-        ?.getBoundingClientRect();
+      var br = document.getElementById("scroll_picker")?.getBoundingClientRect();
       initialPosition = {
         ...initialPosition,
         scrollTop: scrollbar.scrollTop,
-        mouseY: event.clientY,
-        offsetY: event.clientY - (br?.top ?? 0),
+        mouseY: clientY,
+        offsetY: clientY - (br?.top ?? 0),
       };
 
       scrollerRef.current.style.cursor = "grabbing";
@@ -175,28 +174,20 @@ const ScrollPicker: React.FC<IProps> = ({
     children[offsetY / 30 + 6].setAttribute("data-selected", "3");
   };
 
-  const emptyElems: { value: string; logo?: string }[] = [...Array(3)].map(
-    () => ({ value: "" })
-  );
+  const emptyElems: { value: string; logo?: string }[] = [...Array(3)].map(() => ({ value: "" }));
 
   const elementsWithEmpty = [...emptyElems, ...elements, ...emptyElems];
 
   const items = (
-    <div
-      ref={scrollerRef}
-      className={classes.elements}
-      onMouseDown={onMouseDown}
-    >
-      {elementsWithEmpty.map((elem) => (
+    <div ref={scrollerRef} className={classes.elements} onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
+      {elementsWithEmpty.map(elem => (
         <div key={elem.value} className={classes.element}>
           {!specialType ? (
             elem.value
           ) : (
             <>
               {specialType === "countries" && elem.value}
-              {specialType === "logos" && elem.logo && (
-                <img src={elem.logo} alt={elem.value} />
-              )}
+              {specialType === "logos" && elem.logo && <img src={elem.logo} alt={elem.value} />}
             </>
           )}
         </div>
