@@ -179,7 +179,7 @@ const ScrollPicker: React.FC<IProps> = ({
   const elementsWithEmpty = [...emptyElems, ...elements, ...emptyElems];
 
   const items = (
-    <div ref={scrollerRef} className={classes.elements} onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
+    <div ref={scrollerRef} className={classes.elements}>
       {elementsWithEmpty.map(elem => (
         <div key={elem.value} className={classes.element}>
           {!specialType ? (
