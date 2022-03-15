@@ -2,7 +2,6 @@ import React from "react";
 import { makeStyles } from "@material-ui/core";
 import Scrollbar from "smooth-scrollbar";
 import { ScrollStatus } from "smooth-scrollbar/interfaces";
-import useDraggableScroll from "../../hooks/useDraggableScroll";
 
 export interface IProps {
   elements: { value: string; logo?: string }[];
