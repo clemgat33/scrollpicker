@@ -37,7 +37,7 @@ const ScrollPicker: React.FC<IProps> = ({
   const initialScrollTop = selectedValue ? elements.map(elem => elem.value).indexOf(selectedValue) * 30 : 0;
 
   const options = {
-    damping: 0.1,
+    damping: 0.07,
     plugins: {
       overscroll: { enable: true, effect: "bounce", damping: 0.15, maxOverscroll: 150 },
     },
@@ -152,8 +152,8 @@ const ScrollPicker: React.FC<IProps> = ({
   const touchUpHandler = () => {
     if (scrollerRef.current) scrollerRef.current.style.cursor = "grab";
     // Remove the event listeners since it is not necessary to track the mouse position anymore
-    document.removeEventListener("mousemove", mouseMoveHandler);
-    document.removeEventListener("mouseup", mouseUpHandler);
+    document.removeEventListener("touchmove", touchMoveHandler);
+    document.removeEventListener("touchup", touchUpHandler);
 
     if (initialPosition.isMoving === false && scrollbar) {
       const clickedPoint = initialPosition.offsetY + scrollbar.scrollTop - 90;
@@ -162,7 +162,6 @@ const ScrollPicker: React.FC<IProps> = ({
   };
 
   const onMouseDown = (event: { clientY: number }) => {
-    console.log("onMouseDown", scrollbar, scrollerRef.current);
     if (scrollbar && scrollerRef.current) {
       // Save the position at the moment the user presses down
       var br = document.getElementById("scroll_picker")?.getBoundingClientRect();
