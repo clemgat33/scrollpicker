@@ -33,6 +33,22 @@ const Pickers: React.FC = () => {
       </div>
 
       <div>
+        <h4>Version 2</h4>
+        <ModalSelect
+          open={openv2}
+          handleClose={() => setOpenv2(false)}
+          options={years.map(option => ({ value: option }))}
+          initialValue={year ? year.toString() : years[0]}
+          handleSelectChange={value => setYear(parseInt(value))}
+          size="small"
+          version={2}
+        />
+        <Button className={classes.buttonSelect} onClick={() => setOpenv2(true)} endIcon={<KeyboardArrowDownIcon />}>
+          {year !== 0 ? year.toString() : "Year" ?? "-"}
+        </Button>
+      </div>
+
+      <div>
         <h4>Version 3</h4>
         <ModalSelect
           open={openv3}

@@ -69,9 +69,19 @@ const ModalSelect: React.FC<IProps> = ({
         <div className={classes.closeIcon}>
           <CloseIcon onClick={onClose} />
         </div>
+        <h3 style={{ textAlign: "center", margin: "0 auto 20px" }}>Version: {version}</h3>
         <div style={size === "small" ? { width: 100 } : { width: 200 }} className={classes.wrapper}>
           {version === 3 && (
             <ScrollPickerV3
+              elements={options}
+              selectedValue={value}
+              handleSelect={handleSelect}
+              handleSelectAndClose={handleSelectAndClose}
+              specialType={specialType}
+            />
+          )}
+          {version === 2 && (
+            <ScrollPickerV2
               elements={options}
               selectedValue={value}
               handleSelect={handleSelect}

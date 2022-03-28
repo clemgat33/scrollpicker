@@ -251,7 +251,7 @@ const useStyles = makeStyles(() => ({
     cursor: "grab",
     height: "100%",
     "& .scrollbar-track.scrollbar-track-y": {
-      display: "none !important",
+      // display: "none !important",
     },
   },
   element: {
